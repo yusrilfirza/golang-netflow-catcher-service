@@ -1,12 +1,12 @@
 package decoder
 
 import (
+	"encoding/json"
 	"fmt"
 	decoder "netflow-catcher-service/domain/decoder"
 	helper "netflow-catcher-service/package/helper/contract"
 	"netflow-catcher-service/package/helper/logger"
 	"os"
-	"strconv"
 
 	"github.com/fln/nf9packet"
 )
@@ -15,21 +15,16 @@ type implementation struct {
 	logger helper.Logger
 }
 
-type templateCache map[string]*nf9packet.TemplateRecord
-
 func (i *implementation) RestructureData(template *nf9packet.TemplateRecord, records []nf9packet.FlowDataRecord) {
-	fmt.Printf("|")
-	for _, f := range template.Fields {
-		fmt.Printf(" %s |", f.Name())
-	}
-	fmt.Printf("\n")
 
 	for _, r := range records {
-		fmt.Printf("|")
+		item := map[string]interface{}{}
 		for i := range r.Values {
-			colWidth := len(template.Fields[i].Name())
-			fmt.Printf(" %"+strconv.Itoa(colWidth)+"s |", template.Fields[i].DataToString(r.Values[i]))
+			item[template.Fields[i].Name()] = template.Fields[i].DataToString(r.Values[i])
 		}
+
+		jsonData, _ := json.MarshalIndent(item, "", " ")
+		fmt.Print(string(jsonData))
 		fmt.Printf("\n")
 	}
 }
